@@ -1,8 +1,10 @@
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT']='hide'
 from pygame import init,quit
 from pygame.display import list_modes,set_mode,set_caption,set_icon,flip
 from pygame.event import get as get_events
 from pygame.time import Clock
-from pygame.sprite import Group,GroupSingle,Sprite
+from pygame.sprite import Group,GroupSingle,Sprite,spritecollide
 from pygame.image import load as load_image
 from pygame.transform import scale_by
 from pygame.mouse import get_pos
@@ -23,7 +25,7 @@ clock=Clock()
 obstacles=Group()
 destination=start=None
 class Obstacle(Sprite):
-    obstacle_img=load_image(join('assets','obstacle.jpeg')).convert()
+    obstacle_img=load_image(join('assets','obstacle.png')).convert_alpha()
     def __init__(self):
         Sprite.__init__(self)
         self.image=scale_by(Obstacle.obstacle_img,uniform(*OBSTACLE_SIZE))
@@ -64,12 +66,13 @@ class Obstacle(Sprite):
     def update(self):
         self.rect.x,self.rect.y=next(self.position)
 class Me(Sprite):
-    my_img=load_image(join('assets','player.png')).convert()
+    my_img=load_image(join('assets','player.png')).convert_alpha()
     def __init__(self):
         Sprite.__init__(self)
-        self.image=scale_by(Me.my_img,0.1)
+        self.image=scale_by(Me.my_img,1)
         self.rect=self.image.get_rect()
-        self.rect.x=WIDTH#hidden
+        self.velocity_x=MY_VELOCITY_X
+        self.velocity_y=MY_VELOCITY_Y
         self.moving=False
         self.path=[]
         self.point=None
@@ -79,17 +82,18 @@ class Me(Sprite):
         self.point=(p for p in self.path)
     def update(self):
         try:
-            self.rect.x,self.rect.y=next(self.point)
-            print(self.rect.x,self.rect.y)
+            self.rect.center=next(self.point)
         except StopIteration:
+            global start,destination
             start=destination=None
             self.moving=False
-            self.rect.x=WIDTH#hide
 for _ in range(*NUMBER_OF_OBSTACLES):Obstacle()
 me=Me()
 my_group=GroupSingle(me)
 #game loop
 while True:
+    #collision check
+    assert not me.moving or len(spritecollide(me,obstacles,False))==0,'collision'
     #wait
     clock.tick(FPS)
     #events
@@ -110,7 +114,7 @@ while True:
     if start!=None:circle(surface,START_COLOR,start,POINT_DIAMETER,0)
     if destination!=None:
         circle(surface,DESTINATION_COLOR,destination,POINT_DIAMETER,0)
-        #lines(surface,PATH_COLOR,False,me.path,PATH_WIDTH)
+        lines(surface,PATH_COLOR,False,me.path,PATH_WIDTH)
         my_group.update()
         my_group.draw(surface)
     obstacles.draw(surface)

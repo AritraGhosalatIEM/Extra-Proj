@@ -15,7 +15,7 @@ from itertools import count,cycle
 from sys import exit
 from os.path import join
 from config import *
-from algorithms import straight as algorithm
+from algorithms import a_star as algorithm
 init()
 WIDTH,HEIGHT=list_modes()[0]
 surface=set_mode((WIDTH,HEIGHT))
@@ -78,7 +78,7 @@ class Me(Sprite):
         self.point=None
     def move(self):
         self.moving=True
-        self.path=algorithm(self,obstacles,start,destination)
+        self.path=algorithm(self,obstacles,start,destination,WIDTH,HEIGHT)
         self.point=(p for p in self.path)
     def update(self):
         try:

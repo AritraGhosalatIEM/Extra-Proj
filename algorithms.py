@@ -21,6 +21,46 @@ def straight(player,obstacles,start,to,width,height):
 class Node:
     network=None
     disturbed=SimpleQueue()
+    @staticmethod
+    def safe(point,obstacles,player,width,height):
+        for obstacle in obstacles:
+            # breakpoint()
+            try:
+                startx,starty=obstacle.start_prediction
+            except AttributeError:#not calculated yet
+                startx=-obstacle.rect.width if obstacle.velocity_x>0 else width
+                starty=-obstacle.rect.height if obstacle.velocity_y>0 else height
+                timex=float('inf') if obstacle.velocity_x==0 else (obstacle.rect.x-startx)//obstacle.velocity_x
+                timey=float('inf') if obstacle.velocity_y==0 else (obstacle.rect.y-starty)//obstacle.velocity_y
+                if timex>timey:
+                    startx=obstacle.rect.x-obstacle.velocity_x*timey
+                elif timey>timex:
+                    starty=obstacle.rect.y-obstacle.velocity_y*timex
+                endx=-obstacle.rect.width if obstacle.velocity_x<0 else width
+                endy=-obstacle.rect.width if obstacle.velocity_y<0 else height
+                timex=float('inf') if obstacle.velocity_x==0 else (endx-obstacle.rect.x)//obstacle.velocity_x
+                timey=float('inf') if obstacle.velocity_x==0 else (endy-obstacle.rect.y)//obstacle.velocity_y
+                if timex>timey:
+                    endx=obstacle.rect.x+obstacle.velocity_x*timey
+                elif timey>timex:
+                    endy=obstacle.rect.y+obstacle.velocity_y*timex
+                assert startx==obstacle.start_x and starty==obstacle.start_y
+                obstacle.start_prediction=(startx,starty)
+                obstacle.step_prediction=(endy-starty)//obstacle.velocity_y if obstacle.velocity_x==0 else (endx-startx)//obstacle.velocity_x
+            finally:
+                current_step=(obstacle.rect.y-starty)//obstacle.velocity_y if obstacle.velocity_x==0 else (obstacle.rect.x-startx)//obstacle.velocity_x
+                future_step=(current_step+point.distance)%obstacle.step_prediction
+                futurex=future_step*obstacle.velocity_x+startx
+                futurey=future_step*obstacle.velocity_y+starty
+                futurexend=futurex+obstacle.rect.width
+                futureyend=futurey+obstacle.rect.height
+                playerx=point.coordinates[0]-player.rect.width//2
+                playery=point.coordinates[1]-player.rect.height//2
+                playerxend=point.coordinates[0]+player.rect.width//2
+                playeryend=point.coordinates[1]+player.rect.height//2
+                if not (playerxend<futurex or playerx>futurexend or playeryend<futurey or playery>futureyend):
+                    return False
+            return True
     @classmethod
     def create_network(cls,width,height,horizontal_separation,vertical_separation):
         cls.network=tuple(tuple((Node((j,i)) for j in range(0,width,horizontal_separation))) for i in range(0,height,vertical_separation))
@@ -60,7 +100,6 @@ class Node:
         self._distance=value
     def __lt__(self,other):return self.cost<other.cost
     def __eq__(self,other):return self.cost==other.cost
-from time import sleep#testing
 def a_star(player,obstacles,start,to,width,height):
     if Node.network==None:
         Node.create_network(width,height,player.velocity_x,player.velocity_y)
@@ -75,9 +114,12 @@ def a_star(player,obstacles,start,to,width,height):
         nodes.remove(current)#priority queue behavior
         for neighbour in current.neighbours:
             if neighbour.distance>(current.distance+1):
-                neighbour.distance=current.distance+1
-                neighbour.cost=neighbour.distance+int(((end_node.coordinates[0]-current.coordinates[0])**2+(end_node.coordinates[1]-current.coordinates[1])**2)**0.5)
                 neighbour.parent=current
+                neighbour.distance=current.distance+1
+                if Node.safe(neighbour,obstacles,player,width,height):
+                    neighbour.cost=neighbour.distance+int(((end_node.coordinates[0]-current.coordinates[0])**2+(end_node.coordinates[1]-current.coordinates[1])**2)**0.5)
+                else:
+                    neighbour.cost=float('inf')
     path=[]
     while not(current is None):
         path.insert(0,current.coordinates)

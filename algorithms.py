@@ -24,7 +24,6 @@ class Node:
     @staticmethod
     def safe(point,obstacles,player,width,height):
         for obstacle in obstacles:
-            # breakpoint()
             try:
                 startx,starty=obstacle.start_prediction
             except AttributeError:#not calculated yet
@@ -37,9 +36,9 @@ class Node:
                 elif timey>timex:
                     starty=obstacle.rect.y-obstacle.velocity_y*timex
                 endx=-obstacle.rect.width if obstacle.velocity_x<0 else width
-                endy=-obstacle.rect.width if obstacle.velocity_y<0 else height
+                endy=-obstacle.rect.height if obstacle.velocity_y<0 else height
                 timex=float('inf') if obstacle.velocity_x==0 else (endx-obstacle.rect.x)//obstacle.velocity_x
-                timey=float('inf') if obstacle.velocity_x==0 else (endy-obstacle.rect.y)//obstacle.velocity_y
+                timey=float('inf') if obstacle.velocity_y==0 else (endy-obstacle.rect.y)//obstacle.velocity_y
                 if timex>timey:
                     endx=obstacle.rect.x+obstacle.velocity_x*timey
                 elif timey>timex:
@@ -60,7 +59,7 @@ class Node:
                 playeryend=point.coordinates[1]+player.rect.height//2
                 if not (playerxend<futurex or playerx>futurexend or playeryend<futurey or playery>futureyend):
                     return False
-            return True
+        return True
     @classmethod
     def create_network(cls,width,height,horizontal_separation,vertical_separation):
         cls.network=tuple(tuple((Node((j,i)) for j in range(0,width,horizontal_separation))) for i in range(0,height,vertical_separation))

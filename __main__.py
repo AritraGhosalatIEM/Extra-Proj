@@ -87,7 +87,7 @@ class Me(Sprite):
             global start,destination
             start=destination=None
             self.moving=False
-for _ in range(*NUMBER_OF_OBSTACLES):Obstacle()
+for _ in range(randint(*NUMBER_OF_OBSTACLES)):Obstacle()
 me=Me()
 my_group=GroupSingle(me)
 #game loop

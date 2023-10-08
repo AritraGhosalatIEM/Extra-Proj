@@ -34,19 +34,19 @@ class Obstacle(Sprite):
         if choice((True,False)):#vertical border
             if choice((True,False)):#left border
                 self.start_x=-self.rect.width
-                self.velocity_x=randint(0,MAX_OBSTACLE_VELOCITY_X)
+                self.velocity_x=randint(1,MAX_OBSTACLE_VELOCITY_X)
             else:#right border
                 self.start_x=WIDTH
-                self.velocity_x=randint(-MAX_OBSTACLE_VELOCITY_X,0)
+                self.velocity_x=randint(-MAX_OBSTACLE_VELOCITY_X,-1)
             self.start_y=randint(0,HEIGHT)
             self.velocity_y=randint(-MAX_OBSTACLE_VELOCITY_Y,MAX_OBSTACLE_VELOCITY_Y)
         else:#horizontal border
             if choice((True,False)):#top border
                 self.start_y=-self.rect.height
-                self.velocity_y=randint(0,MAX_OBSTACLE_VELOCITY_Y)
+                self.velocity_y=randint(1,MAX_OBSTACLE_VELOCITY_Y)
             else:#bottom border
                 self.start_y=HEIGHT
-                self.velocity_y=randint(-MAX_OBSTACLE_VELOCITY_Y,0)
+                self.velocity_y=randint(-MAX_OBSTACLE_VELOCITY_Y,-1)
             self.start_x=randint(0,WIDTH)
             self.velocity_x=randint(-MAX_OBSTACLE_VELOCITY_X,MAX_OBSTACLE_VELOCITY_X)
         if self.velocity_x==0:
@@ -60,7 +60,7 @@ class Obstacle(Sprite):
         elif self.velocity_y<0:
             yrange=range(self.start_y,-self.rect.width,self.velocity_y)
         else:
-            yrange=range(self.start_y,WIDTH,self.velocity_y)
+            yrange=range(self.start_y,HEIGHT,self.velocity_y)
         self.position=cycle(zip(xrange,yrange))
         obstacles.add(self)
     def update(self):

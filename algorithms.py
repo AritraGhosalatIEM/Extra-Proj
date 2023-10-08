@@ -29,12 +29,13 @@ class Node:
             except AttributeError:#not calculated yet
                 startx=-obstacle.rect.width if obstacle.velocity_x>0 else width
                 starty=-obstacle.rect.height if obstacle.velocity_y>0 else height
-                timex=float('inf') if obstacle.velocity_x==0 else (obstacle.rect.x-startx)//obstacle.velocity_x
-                timey=float('inf') if obstacle.velocity_y==0 else (obstacle.rect.y-starty)//obstacle.velocity_y
+                timex=float('inf') if obstacle.velocity_x==0 else (obstacle.rect.x-startx)/obstacle.velocity_x
+                timey=float('inf') if obstacle.velocity_y==0 else (obstacle.rect.y-starty)/obstacle.velocity_y
                 if timex>timey:
                     startx=obstacle.rect.x-obstacle.velocity_x*timey
                 elif timey>timex:
                     starty=obstacle.rect.y-obstacle.velocity_y*timex
+                assert startx==obstacle.start_x and starty==obstacle.start_y,f'starty={starty},start_y={obstacle.start_y}'
                 endx=-obstacle.rect.width if obstacle.velocity_x<0 else width
                 endy=-obstacle.rect.height if obstacle.velocity_y<0 else height
                 timex=float('inf') if obstacle.velocity_x==0 else (endx-obstacle.rect.x)//obstacle.velocity_x
@@ -43,14 +44,19 @@ class Node:
                     endx=obstacle.rect.x+obstacle.velocity_x*timey
                 elif timey>timex:
                     endy=obstacle.rect.y+obstacle.velocity_y*timex
-                assert startx==obstacle.start_x and starty==obstacle.start_y
                 obstacle.start_prediction=(startx,starty)
-                obstacle.step_prediction=(endy-starty)//obstacle.velocity_y if obstacle.velocity_x==0 else (endx-startx)//obstacle.velocity_x
+                obstacle.step_prediction=((endy-starty)//obstacle.velocity_y if obstacle.velocity_x==0 else (endx-startx)//obstacle.velocity_x)
             finally:
-                current_step=(obstacle.rect.y-starty)//obstacle.velocity_y if obstacle.velocity_x==0 else (obstacle.rect.x-startx)//obstacle.velocity_x
-                future_step=(current_step+point.distance)%obstacle.step_prediction
-                futurex=future_step*obstacle.velocity_x+startx
-                futurey=future_step*obstacle.velocity_y+starty
+                try:
+                    current_step=(obstacle.rect.x-startx)//obstacle.velocity_x
+                except ZeroDivisionError:
+                    current_step=(obstacle.rect.y-starty)//obstacle.velocity_y
+                if obstacle.step_prediction>0:
+                    future_step=(current_step+point.distance)%obstacle.step_prediction
+                    futurex=future_step*obstacle.velocity_x+startx
+                    futurey=future_step*obstacle.velocity_y+starty
+                else:
+                    futurex,futurey=obs.start_prediction
                 futurexend=futurex+obstacle.rect.width
                 futureyend=futurey+obstacle.rect.height
                 playerx=point.coordinates[0]-player.rect.width//2
